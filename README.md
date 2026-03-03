@@ -1,51 +1,177 @@
-# EEGNet Epoch-Level Training
+# 🧠 EEG Sleep Deprivation Classification
 
-This repository contains code for training **EEGNet** on the **Sleep Deprivation EEG dataset** at the **epoch level**.
+Deep learning pipeline for classifying **Normal Sleep (NS)** vs **Sleep Deprivation (SD)** using resting-state EEG data.
 
-## Dataset
+This project implements an EEGNet-based convolutional neural network trained on 2-second EEG epochs extracted from resting-state recordings.
 
-- **Name:** Sleep Deprivation EEG (OpenNeuro: [ds004902](https://openneuro.org/datasets/ds004902))  
-- **Subjects:** 71 participants  
-- **Sessions:** Normal Sleep (NS, session 1) and Sleep Deprivation (SD, session 2)  
-- **Data:** Resting-state EEG (eyes open/closed), with behavioral measures of sleepiness and mood  
-- **Format:** EEGLAB `.set` and `.fdt` files  
+---
 
-> **Note:** The dataset files are not included in this repository. Download them separately and place in the `data/` folder.
+# 📁 Project Structure
 
+```
+EEEG_Sleep_Deprivation/
+│
+├── src/
+│   ├── model.py
+│   ├── preprocess.py
+│   ├── train.py
+│   ├── evaluate.py
+│
+├── data/
+│   └── preprocessed/
+│
+├── saved_models/
+├── main.py
+└── requirements.txt
+```
 
+---
 
+# ⚙️ Installation
 
-## Features
+## 1️⃣ Clone Repository
 
-- **Epoch-level training:** Loads all epochs from all subjects into memory at once  
-- **EEGNet model:** Standard deep learning architecture for EEG classification  
-- **Metrics:** Accuracy, loss, ROC AUC, confusion matrix, classification report  
+```bash
+git clone https://github.com/ethics-neuro-ai/EEEG_Sleep_Deprivation.git
+cd EEEG_Sleep_Deprivation
+```
 
-## Usage
+## 2️⃣ Create Virtual Environment (Recommended)
 
-1. Clone this repository:
+```bash
+python -m venv venv
+source venv/bin/activate      # macOS / Linux
+venv\Scripts\activate         # Windows
+```
 
+## 3️⃣ Install Dependencies
 
-git clone https://github.com/ethics-neuro-ai/eeg-epoch-level.git
-cd eeg-epoch-level
+```bash
+pip install -r requirements.txt
+```
 
+---
 
-Download the dataset from OpenNeuro and place all .set/.fdt files in the data/ folder.
+# 📊 Dataset Structure
 
-Open the Jupyter notebook:
+The dataset must follow this structure:
 
-jupyter notebook notebooks/epoch_level_training.ipynb
+```
+dataset_path/
+├── sub-01/
+│   ├── ses-1/eeg/*.set
+│   ├── ses-2/eeg/*.set
+├── sub-02/
+...
+```
 
-Run the cells to preprocess data, train EEGNet, and evaluate performance.
+- `ses-1` → Normal Sleep (label = 0)
+- `ses-2` → Sleep Deprivation (label = 1)
+- File format: EEGLAB `.set`
 
-Notes
+---
 
-Epoch-level vs Subject-wise:
+# ▶️ Running the Full Pipeline
 
-Epoch-level: all epochs from all subjects loaded into RAM (requires sufficient memory, e.g., 8GB+)
+### Edit paths in `main.py`:
 
-Subject-wise: streams data per subject to reduce RAM usage, suitable for real-time or low-memory scenarios (implemented in a separate notebook).
+```python
+DATA_PATH = "/path/to/raw_dataset"
+SAVE_PATH = "./data/preprocessed"
+MODEL_PATH = "./saved_models/eegnet_sleep_model.keras"
+```
 
-Data Exclusion: Files with missing or corrupt samples are skipped automatically.
+### Run:
 
-Results: High classification performance on the sleep deprivation EEG dataset, with ROC-AUC ~0.99 and accuracy ~0.96.
+```bash
+python main.py
+```
+
+---
+
+# 🔄 Pipeline Overview
+
+## 1️⃣ Preprocessing
+- Bandpass filter (1–45 Hz)
+- Average re-reference
+- Resample to 125 Hz
+- 2-second fixed-length epochs
+- Per-epoch normalization
+- Save as `.npy` files
+
+## 2️⃣ Training
+- EEGNet-based CNN
+- 70/15/15 train/validation/test split
+- Binary classification (NS vs SD)
+
+## 3️⃣ Evaluation
+- Test Accuracy
+- ROC Curve & AUC
+- Confusion Matrix
+- Precision-Recall Curve
+- Sensitivity & Specificity
+
+## 4️⃣ Model Saving
+Saved to:
+
+```
+saved_models/eegnet_sleep_model.keras
+```
+
+---
+
+# 🧠 Model Description
+
+The model learns:
+
+- Spatial patterns across electrodes
+- Temporal oscillatory dynamics
+- Physiological differences between normal sleep and sleep deprivation
+
+**Input shape:**
+```
+(n_channels, n_times, 1)
+```
+
+**Output:**
+```
+Probability of Sleep Deprivation
+```
+
+---
+
+# 📈 Example Performance
+
+```
+Test Accuracy: ~95%
+ROC AUC: ~0.99
+Balanced precision and recall across classes
+```
+
+---
+
+# 🛠 System Requirements
+
+- Python ≥ 3.9
+- ≥ 8GB RAM recommended
+- GPU optional but speeds up training
+
+---
+
+# ⚠️ Important Note
+
+Current evaluation uses **epoch-level splitting**, meaning:
+
+- Data from the same subject may appear in both train and test sets.
+- Results reflect strong within-subject discriminability.
+- Subject-wise validation is recommended for real-world generalization.
+
+---
+
+# 📌 Research Purpose
+
+This project demonstrates the feasibility of using convolutional neural networks to detect physiological alterations in resting-state EEG caused by sleep deprivation.
+
+It is intended for research and methodological exploration.
+
+---
